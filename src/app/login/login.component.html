@@ -1,0 +1,33 @@
+<div class="card-body">
+    <h5 class="card-title">Ingreso de usuario</h5>
+    <form id="loginForm" [formGroup]="formGroup" (ngSubmit)="onSubmit()" novalidate>
+        <fieldset>
+            <div class="form-group" [ngClass]="{'has-danger':isValid('username')}">
+                <label for="username" class="col-form-label col-form-label-sm">Username:</label>
+                <input id="username" formControlName="username" type="text" class="form-control form-control-sm single-line" [ngClass]="{'is-invalid':isValid('username')}" />
+                <div id="username-required-error" [ngClass]="{'invalid-feedback':controls['username'].errors?.['required']}" *ngIf="controls['username'].errors?.['required']">Username is required</div>
+                <div id="username-pattern-error" [ngClass]="{'invalid-feedback':controls['username'].errors?.['pattern']}" *ngIf="formGroup.controls['username'].errors?.['pattern']">Username must be four letters and two digits</div>
+            </div>
+            <div class="form-group" [ngClass]="{'has-danger':isValid('pin')}">
+                <label for="pin" class="col-form-label col-form-label-sm">PIN:</label>
+                <input id="pin" formControlName="pin" type="text" class="form-control form-control-sm single-line" [ngClass]="{'is-invalid':isValid('pin')}" />
+                <div id="pin-required-error" [ngClass]="{'invalid-feedback':controls['pin'].errors?.['required']}" *ngIf="controls['pin'].errors?.['required']">PIN is required</div>
+                <div id="pin-min-error" [ngClass]="{'invalid-feedback':controls['pin'].errors?.['min']}" *ngIf="controls['pin'].errors?.['min']">PIN must be equal or greater than 0</div>
+                <div id="pin-max-error" [ngClass]="{'invalid-feedback':controls['pin'].errors?.['max']}" *ngIf="controls['pin'].errors?.['max']">PIN must be less or equal to 9999</div>
+            </div>
+            <div class="form-group">
+                <label class="col-form-label col-form-label-sm">{{this.result?.greet}}</label>
+            </div>
+            <br />
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary ms-4 me-3" [disabled]="formGroup.invalid">Ingresar</button>
+            </div>
+            <br />
+            <div class="form-group has-danger" [hidden]="!error">
+                <fieldset>
+                    <input id="error" type="text" [value]="error?.message" class="form-control form-control-sm is-invalid text-center" disabled />
+                </fieldset>
+            </div>
+        </fieldset>
+    </form>
+</div>
