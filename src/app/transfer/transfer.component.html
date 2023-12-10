@@ -1,0 +1,54 @@
+<div class="card-body">
+    <h5 class="card-title">Transferencia</h5>
+    <form id="transferForm" [formGroup]="formGroup" (ngSubmit)="onSubmit()" novalidate>
+        <fieldset>
+            <div class="form-group" [ngClass]="{'has-danger': isValid('accountFrom')}">
+                <label for="accountFrom" class="col-form-label col-form-label-sm mt-2">Cuenta origen:</label>
+                <input id="accountFrom" type="text" class="form-control form-control-sm single-line"
+                    [ngClass]="{'is-invalid': isValid('accountFrom')}" formControlName="accountFrom" />
+                <div id="account-from-required-error"
+                    [ngClass]="{'invalid-feedback': controls['accountFrom'].errors?.['required']}"
+                    *ngIf="controls['accountFrom'].errors?.['required']">
+                    La cuenta origen es un dato obligatorio
+                </div>
+                <div id="account-from-pattern-error"
+                    [ngClass]="{'invalid-feedback': controls['accountFrom'].errors?.['pattern']}"
+                    *ngIf="controls['accountFrom'].errors?.['pattern']">
+                    La cuenta origen debe ser de tres dígitos
+                </div>
+            </div>
+            <div class="form-group" [ngClass]="{'has-danger': isValid('accountTo')}">
+                <label for="accountTo" class="col-form-label col-form-label-sm mt-2">Cuenta destino:</label>
+                <input id="accountTo" type="text" class="form-control form-control-sm single-line"
+                    [ngClass]="{'is-invalid': isValid('accountTo')}" formControlName="accountTo" />
+                <div id="account-to-required-error"
+                    [ngClass]="{'invalid-feedback': controls['accountTo'].errors?.['required']}"
+                    *ngIf="controls['accountTo'].errors?.['required']">
+                    La cuenta destino es un dato obligatorio
+                </div>
+                <div id="account-to-pattern-error"
+                    [ngClass]="{'invalid-feedback': controls['accountTo'].errors?.['pattern']}"
+                    *ngIf="controls['accountTo'].errors?.['pattern']">
+                    La cuenta destino debe ser de tres dígitos
+                </div>
+            </div>
+            <div class="form-group" [ngClass]="{'has-danger': isValid('amount')}">
+                <label for="amount" class="col-form-label col-form-label-sm mt-2">Monto:</label>
+                <input id="amount" type="text" class="form-control form-control-sm single-line"
+                    [ngClass]="{'is-invalid': isValid('amount')}" formControlName="amount" />
+                <div id="amount-required-error" [ngClass]="{'invalid-feedback': controls['amount'].errors?.['required']}"
+                    *ngIf="controls['amount'].errors?.['required']">
+                    El monto a transferir es un dato obligatorio
+                </div>
+                <div id="amount-pattern-error" [ngClass]="{'invalid-feedback': controls['amount'].errors?.['pattern']}"
+                    *ngIf="controls['amount'].errors?.['pattern']">
+                    El monto a transferir tiene un formato incorrecto
+                </div>
+            </div>
+            <br />
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" [disabled]="formGroup.invalid">Transferir</button>
+            </div>
+        </fieldset>
+    </form>
+</div>

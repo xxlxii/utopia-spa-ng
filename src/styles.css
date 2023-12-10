@@ -1,0 +1,15 @@
+@import 'https://bootswatch.com/5/sandstone/bootstrap.min.css';
+
+body {
+  margin: 10px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+input, select, textarea {
+  max-width: 280px;;
+}
+
+.card-body {
+  background-color:lightgray;
+}

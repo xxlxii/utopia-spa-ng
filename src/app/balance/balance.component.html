@@ -1,0 +1,43 @@
+<div class="card-body">
+    <h5 class="card-title">Consulta de saldo</h5>
+    <form id="getBalanceForm" [formGroup]="formGroup" (ngSubmit)="onSubmit()" novalidate>
+        <fieldset>
+            <div class="form-group" [ngClass]="{'has-danger':isValid('account')}">
+                <label for="account" class="col-form-label col-form-label-sm">Número de cuenta:</label>
+                <input id="account" formControlName="account" type="text"
+                    class="form-control form-control-sm single-line" [ngClass]="{'is-invalid':isValid('account')}"
+                    [readonly]="state !== State.Initial" />
+                <div id="account-required-error"
+                    [ngClass]="{'invalid-feedback':controls['account'].errors?.['required']}"
+                    *ngIf="formGroup.controls['account'].errors?.['required']">
+                    El número de cuenta es un dato obligatorio
+                </div>
+                <div id="account-pattern-error" [ngClass]="{'invalid-feedback':controls['account'].errors?.['pattern']}"
+                    *ngIf="formGroup.controls['account'].errors?.['pattern']">
+                    El número de cuenta debe ser de tres dígitos
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-form-label col-form-label-sm" for="balance">Saldo: </label>
+                <input id="balance" class="form-control form-control-sm" type="text"
+                    [value]="this.result?.balance|currency" disabled />
+            </div>
+            <br />
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary ms-4 me-3" [disabled]="formGroup.invalid">
+                    Consultar
+                </button>
+                <button type="button" class="btn btn-dark" (click)="reset()">
+                    Resetear
+                </button>
+            </div>
+            <br />
+            <div class="form-group has-danger" [hidden]="!error">
+                <fieldset>
+                    <input id="error" class="form-control form-control-sm is-invalid text-center" type="text"
+                        [value]="error?.message" />
+                </fieldset>
+            </div>
+        </fieldset>
+    </form>
+</div>

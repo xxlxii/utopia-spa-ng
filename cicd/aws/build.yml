@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Install phase started on `date`
+      - yum update -y -q
+      - npm install
+      - npm install --location=global @angular/cli
+      - npm audit fix --force
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - aws configure set region $AWS_DEFAULT_REGION
+      - cd ./cicd/aws
+      - ./spa-setup.sh
+      - cd ../..
+      - ng build --configuration staging
+
+  post_build:
+    commands:
+      - ls -l ./dist
+      - aws s3 rm s3://${WEBSITE_BUCKET} --recursive
+      - echo Build completed on `date`
+
+artifacts:
+    files:
+      - '**/*'
+    base-directory: 'dist*'
+    discard-paths: yes

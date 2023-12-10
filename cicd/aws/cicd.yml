@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: utopia-spa-ng codepipeline
+
+Parameters:
+  CicdBucket:
+    Description: S3 Bucket for CI/CD artifacts
+    Type: String
+  WebsiteBucket:
+    Description: S3 Bucket to host Angular SPA
+    Type: String
+
+Resources:
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: utopia-spa-ng-pipeline-role
+      Description: CodePipeline role
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: utopia-spa-ng-codepipeline-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - iam:PassRole
+                - iam:GetRole
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                - !Join [':', ['arn', 'aws', 'logs', !Ref AWS::Region, !Ref AWS::AccountId, 'log-group', '/aws/codepipeline/utopia-spa-ng']]
+                - !Join [':', ['arn', 'aws', 'logs', !Ref AWS::Region, !Ref AWS::AccountId, 'log-group', '/aws/codepipeline/utopia-spa-ng', '*']]
+              - Action:
+                - codecommit:CancelUploadArchive
+                - codecommit:GetBranch
+                - codecommit:GetCommit
+                - codecommit:GetUploadArchiveStatus
+                - codecommit:UploadArchive
+                - codecommit:GetRepository
+                Effect: Allow
+                Resource: !Sub arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:utopia-spa-ng
+              - Action:
+                - codebuild:BatchGetBuilds
+                - codebuild:StartBuild
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - codedeploy:CreateDeployment
+                - codedeploy:GetApplication
+                - codedeploy:GetApplicationRevision
+                - codedeploy:GetDeployment
+                - codedeploy:GetDeploymentConfig
+                - codedeploy:RegisterApplicationRevision
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - cloudformation:CreateStack
+                - cloudformation:DeleteStack
+                - cloudformation:DescribeStacks
+                - cloudformation:UpdateStack
+                - cloudformation:CreateChangeSet
+                - cloudformation:DeleteChangeSet
+                - cloudformation:DescribeChangeSet
+                - cloudformation:ExecuteChangeSet
+                - cloudformation:SetStackPolicy
+                - cloudformation:ValidateTemplate
+                - cloudformation:CreateStackSet
+                - cloudformation:UpdateStackSet
+                - cloudformation:CreateStackInstances
+                - cloudformation:DescribeStackSetOperation
+                - cloudformation:DescribeStackSet
+                - cloudformation:ListStackInstances
+                - cloudformation:CreateStackInstances
+                - cloudformation:DescribeStackSetOperation
+                - iam:PassRole
+                - iam:GetRole
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - s3:GetObject
+                - s3:GetObjectVersion
+                - s3:GetBucketAcl
+                - s3:GetBucketLocation
+                - s3:PutObject
+                Effect: Allow
+                Resource:
+                - !Join ['', ['arn:aws:s3:::', !Ref CicdBucket]]
+                - !Join ['', ['arn:aws:s3:::', !Ref CicdBucket, '/*']]
+              - Action:
+                - s3:List*
+                - s3:DeleteObject
+                - s3:PutObject
+                Effect: Allow
+                Resource:
+                - !Join ['', ['arn:aws:s3:::', !Ref WebsiteBucket]]
+                - !Join ['', ['arn:aws:s3:::', !Ref WebsiteBucket, '/*']]
+      Tags:
+      - Key: Project
+        Value: Utopia
+      - Key: Environment
+        Value: Development
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: utopia-spa-ng-codebuild-role
+      Description: CodeBuild role
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: utopia-spa-ng-codebuild-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                - !Join [':', ['arn', 'aws', 'logs', !Ref AWS::Region, !Ref AWS::AccountId, 'log-group', '/aws/codebuild/utopia-spa-ng']]
+                - !Join [':', ['arn', 'aws', 'logs', !Ref AWS::Region, !Ref AWS::AccountId, 'log-group', '/aws/codebuild/utopia-spa-ng', '*']]
+              - Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:GetObjectVersion
+                - s3:GetBucketAcl
+                - s3:GetBucketLocation
+                Effect: Allow
+                Resource:
+                - !Join ['', ['arn:aws:s3:::', !Ref CicdBucket]]
+                - !Join ['', ['arn:aws:s3:::', !Ref CicdBucket, '/*']]
+              - Action:
+                - s3:List*
+                - s3:DeleteObject
+                - s3:PutObject
+                Effect: Allow
+                Resource:
+                - !Join ['', ['arn:aws:s3:::', !Ref WebsiteBucket]]
+                - !Join ['', ['arn:aws:s3:::', !Ref WebsiteBucket, '/*']]
+              - Action:
+                - apigateway:*
+                Effect: Allow
+                Resource: '*'
+      Tags:
+      - Key: Project
+        Value: Utopia
+      - Key: Environment
+        Value: Development
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: CodePipelineRole
+    Properties:
+      Name: utopia-spa-ng-pipeline
+      ArtifactStore:
+        Type: S3
+        Location: !Ref CicdBucket
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+          - Name: SourceAction
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Version: '1'
+              Provider: CodeCommit
+            Configuration:
+              RepositoryName: utopia-spa-ng
+              BranchName: main
+              PollForSourceChanges: false
+            OutputArtifacts:
+              - Name: source
+        - Name: Build
+          Actions:
+          - Name: BuildAction
+            Namespace: BuildActionVariables
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: '1'
+            Configuration:
+              ProjectName: utopia-spa-ng-codebuild-project
+              PrimarySource: cicd
+            InputArtifacts:
+            - Name: source
+            OutputArtifacts:
+            - Name: built
+        - Name: Deploy
+          Actions:
+          - Name: DeployAction
+            Namespace: DeployActionVariables
+            ActionTypeId:
+              Category: Deploy
+              Owner: AWS
+              Provider: S3
+              Version: '1'
+            Configuration:
+              BucketName: !Ref WebsiteBucket
+              Extract: True
+            InputArtifacts:
+              - Name: built
+      Tags:
+      - Key: Project
+        Value: Utopia
+      - Key: Environment
+        Value: Development
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    DependsOn: CodeBuildRole
+    Properties:
+      Name: utopia-spa-ng-codebuild-project
+      Description: utopia-spa-ng build project
+      Artifacts:
+        ArtifactIdentifier: 'utopia-spa-ng'
+        OverrideArtifactName: true
+        Type: CODEPIPELINE
+      ConcurrentBuildLimit: 1
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: WEBSITE_BUCKET
+            Type: PLAINTEXT
+            Value: !Ref WebsiteBucket
+      LogsConfig:
+        CloudWatchLogs:
+          GroupName: /aws/codebuild/utopia-spa-ng
+          Status: ENABLED
+          StreamName: stream
+      QueuedTimeoutInMinutes: 5
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        BuildSpec: './cicd/aws/build.yml'
+        GitCloneDepth: 1
+        Type: CODEPIPELINE
+      SourceVersion: main
+      TimeoutInMinutes: 10
+      Visibility: PUBLIC_READ
+      Tags:
+      - Key: Project
+        Value: Utopia
+      - Key: Environment
+        Value: Development
